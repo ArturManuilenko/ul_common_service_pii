@@ -1,0 +1,45 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
+name = "nero_gitlab"
+verify_ssl = false
+url = "https://__token__:kZG7esv72n325czD7Wdg@gitlab.neroelectronics.by/api/v4/projects/996/packages/pypi/simple"
+# I know save this token here is not good practice. BUT FUCK OFF :) it has permissions only for package registry reading
+
+[packages]
+alembic = "==1.6.5"
+bcrypt = "==3.2.0"
+gunicorn = "==20.1.0"
+migrate = "==0.3.8"
+flask-uuid = "==0.2"
+flask-migrate = "==3.0.1"
+sqlalchemy-utils = "==0.37.7"
+cached-property = "==1.5.2"
+passlib = "==1.7.4"
+redis = "==3.5.3"
+api-utils = {version = "==1.4.12", index = "nero_gitlab"}
+db-utils = {version = "==1.1.2", index = "nero_gitlab"}
+
+
+[dev-packages]
+mypy = "==0.812"
+sqlalchemy-stubs = "==0.4"
+bandit = "==1.6.2"
+flake8 = "==3.8.4"
+flake8-blind-except = "==0.1.1"
+flake8-logging-format = "==0.6.0"
+flake8-self = "==0.2.2"
+flake8-super-call = "==1.0.0"
+flake8-bugbear = "==20.1.4"
+pep8-naming = "==0.11.1"
+safety = "==1.9.0"
+pylint = "==2.3.1"
+pylint-flask-sqlalchemy = "==0.2.0"
+pytest = "==6.2.2"
+pytest-cov = "==2.11.1"
+
+[requires]
+python_version = "3.8"

@@ -1,0 +1,94 @@
+version: "3.8"
+
+
+volumes:
+  pii_volume:
+
+
+x-default-config: &default-config
+  PII__DB__AUTH__DB_URI: "pii__db__auth"
+  PII__DB__GENERAL__DB_URI: "postgresql://admin:admin@pii__db__general:5432/auth_pii"
+  PII__DB__GENERAL__SYS_USER_ID: "6230d349-16b8-4aaa-825c-ab4bee6ccc77"
+  PII__DB__GENERAL__GUEST_USER_ID: "99b66b43-001d-4907-8df5-f5ea43648148"
+  PII__DB__GENERAL__ADMIN_USER_ID: "6dff7395-927d-4013-b86d-a99f5170eaf8"
+  APPLICATION_ENV: "local"
+
+services:
+  pii__balancer:
+    image: library/nginx:1.19-alpine
+    volumes:
+      - ./src/pii__balancer/local/:/etc/nginx/:ro
+    ports:
+      - 7778:7778 # pii__api__auth
+      - 7777:7777 # pii__api__general
+      - 7776:7776 # pii__db__general
+      - 7775:7775 # pii__db__auth
+    depends_on:
+      - pii__api__general
+      - pii__db__general
+      - pii__db__auth
+      - pii__api__auth
+    command: [ nginx-debug, '-g', 'daemon off;' ]
+
+  pii__db__general:
+    image: library/postgres:13.2-alpine
+    # command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: auth_pii
+    expose:
+      - 5432
+    volumes:
+      - pii_volume:/var/lib/postgresql
+
+  manager__pii__db__general:
+    build:
+      context: "."
+      dockerfile: "srv/common-python/Dockerfile"
+    environment:
+      <<: *default-config
+    depends_on:
+      - pii__db__general
+    command: "echo 'DO NOTHING'"
+    volumes:
+      - ./src:/docker_app/src
+
+  pii__api__general:
+    build:
+      context: "."
+      dockerfile: "srv/common-python/Dockerfile"
+    environment:
+      <<: *default-config
+      APPLICATION_PORT: 5000
+      PII__API__AUTH__AES256_ENC_KEY: "weghyju5647856eytkk56t65"
+      JWT_PUBLIC_KEY_PATH: "/docker_app/srv/public_key.txt"
+    command: "/docker_app/src/pii__api__general/bin-start.sh"
+    expose:
+      - 5000
+    volumes:
+      - ./src:/docker_app/src
+      - ./srv:/docker_app/srv
+
+  pii__db__auth:
+    image: redis:6.2-alpine
+    expose:
+      - 6379
+
+  pii__api__auth:
+    build:
+      context: "."
+      dockerfile: "srv/common-python/Dockerfile"
+    environment:
+      <<: *default-config
+      APPLICATION_PORT: 5005
+      PII__API__AUTH__AES256_ENC_KEY: "weghyju5647856eytkk56t65"
+      JWT_PUBLIC_KEY_PATH: "/docker_app/srv/public_key.txt"
+      JWT_PRIVATE_KEY_PATH: "/docker_app/srv/private_key.txt"
+    command: "/docker_app/src/pii__api__auth/bin-start.sh"
+    expose:
+      - 5005
+    volumes:
+      - ./src:/docker_app/src
+      - ./srv:/docker_app/srv

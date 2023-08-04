@@ -1,0 +1,10 @@
+configVersion: 1
+project: pii
+
+---
+image: pii__common_python
+dockerfile: srv/common-python/Dockerfile
+
+---
+image: pii__balancer
+dockerfile: src/pii__balancer/Dockerfile
